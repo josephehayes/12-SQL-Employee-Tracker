@@ -1,19 +1,23 @@
 const inquirer = require('inquirer');
-const mysql = require('mysql');
+const mysql = require('mysql2');
 const cTable = require('console.table');
+require('dotenv').config();
 
-const connection = mysql.createConnection(
+
+// Connect to database
+const db = mysql.createConnection(
     {
-        host: 'localhost',
-        port: 3306,
-        user: 'root',
-        password: 'password',
-        database: 'employee_DB'
+      host: 'localhost',
+      // MySQL username,
+      user: 'root',
+      // TODO: Add MySQL password here
+      password: process.env.PASSWORD,
+      database: process.env.DB_NAME
     },
     console.log('connected to the employee_db database')
 );
 
-connection.connect(function (err) {
+db.connect(function (err) {
     if (err) throw err;
     inquirer
         .prompt([
@@ -34,15 +38,7 @@ connection.connect(function (err) {
 
         ])
         .then((answers) => {
-            // Use user feedback for... whatever!!
-            //console.log(answers);
-
             if (answers.action == "Add an Employee") {
-                // TODO: 
-                // 1. Prompt for employee first name
-                // 2. Prompt for employee last name
-                // 3. Prompt for employee role name
-                // 4. Prompt for employee manager first and last
                 inquirer
                     .prompt([
                         {
@@ -68,31 +64,27 @@ connection.connect(function (err) {
                     ])
                     .then((answers) => {
 
-                        connection.query("select id from role where title = ?", [answers.role_name], (error, test) => {
+                        db.query("select id from role where title = ?", [answers.role_name], (error, test) => {
                             const [first_name, last_name] = answers.manager_name.split(" ");
-                            connection.query("select id from employee where first_name = ? and last_name = ?", [first_name, last_name], (error, test2) => {
+                            db.query("select id from employee where first_name = ? and last_name = ?", [first_name, last_name], (error, test2) => {
                                 const [{ id: role_id }] = test;
                                 const [{ id: manager_id }] = test2;
-                                connection.query("insert into employee (first_name, last_name, role_id, manager_id) values (?,?,?,?)", [answers.first_name, answers.last_name, role_id, manager_id]);
+                                db.query("insert into employee (first_name, last_name, role_id, manager_id) values (?,?,?,?)", [answers.first_name, answers.last_name, role_id, manager_id]);
                             });
                         });
-
-
-                        // 5. Create the employee record
 
                     })
             }
             if (answers.action == "View All Departments") {
-                connection.query("select department_name, id from department", ((err, results) => {
+                db.query("select department_name, id from department", ((err, results) => {
                     if (err) {
                         throw err;
                     }
                     console.table(results);
-                    //console.log(results);
                 }));
             };
             if (answers.action == "View All Roles") {
-                connection.query("select title from role", ((err, results) => {
+                db.query("select title from role", ((err, results) => {
                     if (err) {
                         throw err;
                     }
@@ -102,7 +94,7 @@ connection.connect(function (err) {
             }
 
             if (answers.action == "View All Employees") {
-                connection.query("select first_name, last_name from employee", ((err, results) => {
+                db.query("select first_name, last_name from employee", ((err, results) => {
                     if (err) {
                         throw err;
                     }
@@ -115,7 +107,7 @@ connection.connect(function (err) {
 });
 
 console.table(
-    "\m------ EMPLOYEE TRACKER ------\m"
+    "EMPLOYEE TRACKER"
 );
 
 function askName() {
