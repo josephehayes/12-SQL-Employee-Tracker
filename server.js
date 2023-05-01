@@ -38,7 +38,8 @@ db.connect(function (err) {
 
         ])
         .then((answers) => {
-            if (answers.action == "Add an Employee") {
+            console.log(answers);
+            if (answers.action === "Add an Employee") {
                 inquirer
                     .prompt([
                         {
@@ -64,36 +65,32 @@ db.connect(function (err) {
                     ])
                     .then((answers) => {
 
-                        db.query("select id from role where title = ?", [answers.role_name], (error, test) => {
+                        db.query("select id from role where title = ?", [answers.role_name], (error) => {
                             const [first_name, last_name] = answers.manager_name.split(" ");
-                            db.query("select id from employee where first_name = ? and last_name = ?", [first_name, last_name], (error, test2) => {
-                                const [{ id: role_id }] = test;
-                                const [{ id: manager_id }] = test2;
+                            db.query("select id from employee where first_name = ? and last_name = ?", [first_name, last_name], (error) => {
                                 db.query("insert into employee (first_name, last_name, role_id, manager_id) values (?,?,?,?)", [answers.first_name, answers.last_name, role_id, manager_id]);
                             });
                         });
 
                     })
             }
-            if (answers.action == "View All Departments") {
+            else if (answers.action === "View All Departments") {
                 db.query("select department_name, id from department", ((err, results) => {
                     if (err) {
                         throw err;
                     }
                     console.table(results);
                 }));
-            };
-            if (answers.action == "View All Roles") {
+            }
+            else if (answers.action === "View All Roles") {
                 db.query("select title from role", ((err, results) => {
                     if (err) {
                         throw err;
                     }
                     console.table(results);
                 }))
-
             }
-
-            if (answers.action == "View All Employees") {
+            else if (answers.action === "View All Employees") {
                 db.query("select first_name, last_name from employee", ((err, results) => {
                     if (err) {
                         throw err;
